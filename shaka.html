@@ -1,14 +1,13 @@
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Live Stream Player Fullscreen</title>
+<title>Live Stream Player</title>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/shaka-player/4.7.11/shaka-player.ui.min.js" crossorigin="anonymous"></script>
-<script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/shaka-player/4.7.11/controls.min.css" crossorigin="anonymous">
+<script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
 
 <style>
   html, body {
@@ -109,6 +108,48 @@
       bottom: 8%;
     }
   }
+
+  #click-overlay {
+  position: absolute;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.45);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  z-index: 20;
+  cursor: pointer;
+  transition: opacity 0.3s ease;
+}
+
+#click-overlay.hidden {
+  opacity: 0;
+  pointer-events: none;
+}
+
+.play-btn {
+  width: 90px;
+  height: 90px;
+  background: rgba(255, 255, 255, 0.9);
+  color: #000;
+  font-size: 42px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 10px 30px rgba(0,0,0,0.4);
+}
+
+.play-text {
+  margin-top: 14px;
+  color: #fff;
+  font-size: 16px;
+  font-weight: 600;
+  letter-spacing: 0.5px;
+  opacity: 0.85;
+}
+
+  
 </style>
 </head>
 
@@ -122,9 +163,15 @@
 
 <!-- Shaka Player Video Container -->
 <div class="shaka-video-container" data-shaka-player>
-  <video muted autoplay playsinline preload="metadata" poster="https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEitCOH8hfTOSrv-A6H69EGXH9nONNBHPXCKB4uf6STJCZ2XUaYNDQJtlW4-UEqZCA4KQxXUhpTtWqcNL2z9anbJt1wAYpZGYbffbg3Aogsrku2D5XAxDBhonssZ9DWk7Kgh_W9f_60L7GSkDgc9c2t8mwV0UKetNA7CLufGsc1eIFKwm-X_Rpkb0Ip-gPKK/s16000/YTVS%20ALT%20logo.jpg"></video>
+  <video playsinline preload="metadata" poster="https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEgID5j0jD15XJSl7f9-TQE8SPD_OfsqnjD2U5E9lz7Y2l5BKu_YDz1RfNDy-zX178JR0FlhEMPM_2FhsDmHPSQPyFr_NEiJpEWxvOXW4aOMzVbOJvvFG69xBNOMb4GtWgOZGTY_0znKbBLxaBjFA9OUHP7v5haUGd_Nq2R-bSWxIsnI5sBN_XsvlNQ_LOK5/s1600/YTVS%20ALT%20logo-PNG.png"></video>
 </div>
 <div id="overlay-text">YonoTVs.com</div>
+
+  
+  <div id="click-overlay">
+  <div class="play-btn">▶</div>
+  <div class="play-text">Click to Play</div>
+</div>
 
 
   <script>
@@ -180,7 +227,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     return;
   }
 
-  // Detect stream type
+  // Detect stream type hls or DRM
   const isDash = stream.url.endsWith('.mpd');
   const isHls = stream.url.endsWith('.m3u8');
 
@@ -210,13 +257,34 @@ document.addEventListener('DOMContentLoaded', async () => {
         console.log("✅ HLS via hls.js:", id);
       } else {
         video.src = stream.url; // Safari
-        await video.play();
         console.log("✅ HLS native:", id);
       }
     }
   } catch (e) {
     console.error("Playback failed:", e);
   }
+
+/* Click to play FROM HERE */
+const overlay = document.getElementById('click-overlay');
+
+overlay.addEventListener('click', async () => {
+  try {
+    await video.play(); // user gesture → sound allowed
+    overlay.classList.add('hidden');
+  } catch (err) {
+    console.error("User play failed:", err);
+  }
+});
+
+video.addEventListener('play', () => {
+  overlay.classList.add('hidden');
+});
+
+video.addEventListener('pause', () => {
+  overlay.classList.remove('hidden');
+});
+
+  
 });
 </script>
 
